@@ -4,7 +4,7 @@ import apiService from "../../app/apiService";
 import { POSTS_PER_PAGE } from "../../app/config";
 import { cloudinaryUpload } from "../../utils/cloudinary";
 import { getCurrentUserProfile } from "../user/userSlice";
-import { update } from "lodash";
+
 
 
 const initialState = {
