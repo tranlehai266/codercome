@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Link,
@@ -7,17 +7,18 @@ import {
   Avatar,
   Typography,
   CardHeader,
-  IconButton,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { fDate } from "../../utils/formatTime";
 
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PostReaction from "./PostReaction";
 import CommentForm from "../comment/CommentForm";
 import CommentList from "../comment/CommentList";
+import PostDelete from "./PostOption";
+
 
 function PostCard({ post }) {
+
   return (
     <Card>
       <CardHeader
@@ -45,9 +46,7 @@ function PostCard({ post }) {
           </Typography>
         }
         action={
-          <IconButton>
-            <MoreVertIcon sx={{ fontSize: 30 }} />
-          </IconButton>
+        <PostDelete post={post}/> 
         }
       />
 
@@ -76,3 +75,4 @@ function PostCard({ post }) {
 }
 
 export default PostCard;
+

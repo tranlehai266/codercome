@@ -4,6 +4,8 @@ import apiService from "../../app/apiService";
 import { POSTS_PER_PAGE } from "../../app/config";
 import { cloudinaryUpload } from "../../utils/cloudinary";
 import { getCurrentUserProfile } from "../user/userSlice";
+import { update } from "lodash";
+
 
 const initialState = {
   isLoading: false,
@@ -59,6 +61,27 @@ const slice = createSlice({
       const { postId, reactions } = action.payload;
       state.postsById[postId].reactions = reactions;
     },
+
+    deletePost(state, action) {
+      state.isLoading = false;
+      state.error = null;
+      const postId = action.payload;
+      if(state.currentPagePosts){
+        state.currentPagePosts = state.currentPagePosts.filter(id => id !== postId);
+      }
+    },
+
+    editPostSuccess(state,action) {
+      state.isLoading = false;
+      state.error = null;
+      const updatedPost = action.payload;
+      if (state.postsById[updatedPost._id]) {
+      state.postsById[updatedPost._id] = {
+      ...state.postsById[updatedPost._id],  // giữ lại thông tin cũ
+      content : updatedPost.content, // update content thôi
+      }};
+    }
+
   },
 });
 
@@ -122,3 +145,32 @@ export const sendPostReaction =
       toast.error(error.message);
     }
   };
+
+  export const deletePost =( postId ) => async (dispatch) => {
+    dispatch(slice.actions.startLoading());
+    try {
+      const response = await apiService.delete(`/posts/${postId}`)
+      console.log(response)
+      dispatch(slice.actions.deletePost(postId));
+      toast.success("Removed Post Success");
+      
+    } catch (error) {
+      dispatch(slice.actions.hasError(error.message));
+      toast.error(error.message);
+    }
+  };
+  export const editPost =({ id, updateContent }) => async (dispatch) => {
+    dispatch(slice.actions.startLoading());
+    try {
+      const response = await apiService.put(`/posts/${id}`, { content : updateContent})
+      console.log(response)
+      dispatch(slice.actions.editPostSuccess(response.data));
+      toast.success("Edit Text Success");
+      
+    } catch (error) {
+      dispatch(slice.actions.hasError(error.message));
+      toast.error(error.message);
+    }
+  };
+  
+
