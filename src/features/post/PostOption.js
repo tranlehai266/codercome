@@ -3,10 +3,13 @@ import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { deletePost, editPost } from './postSlice';
 import { useState } from 'react';
-import { Box, Modal, TextField, Typography } from '@mui/material';
+import { Box, Modal, Typography, alpha } from '@mui/material';
+import { FTextField, FUploadImage, FormProvider } from '../../components/form';
+import { useForm } from 'react-hook-form';
+import { LoadingButton } from '@mui/lab';
 
 
 export default function PostOption({ post }) {
@@ -15,8 +18,7 @@ export default function PostOption({ post }) {
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false)
-  const [editContent, setEditContent] = useState(post.content)
-
+ 
 
   const handleOpenModalDelete = () => {
     setOpenDeleteModal(true)
@@ -49,8 +51,43 @@ export default function PostOption({ post }) {
     handleClose()
   }
   
-  const handleSaveEdit = () => {
-    dispatch(editPost({ id: post._id , updateContent: editContent}))
+  const { isLoading } = useSelector((state) => state.post);
+
+  const defaultValues = {
+    content : post.content,
+    image : post.image,
+    id : post._id
+  };
+
+  const methods = useForm({
+    defaultValues
+  })
+
+  const {
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting },
+  } = methods;
+
+  const handleDrop = React.useCallback(
+    (acceptedFiles) => {
+      const file = acceptedFiles[0];
+
+      if (file) {
+        setValue(
+          "image",
+          Object.assign(file, {
+            preview: URL.createObjectURL(file),
+          })
+        );
+      }
+    },
+    [setValue]
+  )
+
+  const onSubmit = (data) => {
+    dispatch(editPost(data))
+    console.log(data)
     setOpenEditModal(false)
   }
   
@@ -81,7 +118,7 @@ export default function PostOption({ post }) {
         }}
       >  
         <MenuItem onClick={handleOpenModalDelete}>Delete</MenuItem>
-        <MenuItem onClick={handleOpenModal}>Edit Text</MenuItem>
+        <MenuItem onClick={handleOpenModal}>Edit Post</MenuItem>
       </Menu>
 
       <Modal
@@ -110,21 +147,47 @@ export default function PostOption({ post }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-      <Box sx={style}>
-        <Typography id="modal-modal-title" variant="h6" component="h2" textAlign="center">
-            Edit Text
-        </Typography>
-        <TextField 
-          fullWidth
-          multiline
-          rows={4}
-          variant="outlined"
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-        />
-          <Button onClick={handleSaveEdit} variant="contained" color="primary" sx={{marginTop:"10px"}} fullWidth >
-            Save
-          </Button>
+      <Box style={style}> 
+      <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
+      <Box sx={{display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                bgcolor: 'white',
+                p: 3,
+                borderRadius: '8px',
+              }}>
+      <Typography variant="h6" component="h2" sx={{ mb: 2, textAlign:"center" }}>
+            Edit Post
+      </Typography>
+      <FTextField
+            name="content"
+            multiline
+            fullWidth
+            rows={4}
+            placeholder="Edit post is here..."
+            sx={{
+              "& fieldset": {
+                borderWidth: `1px !important`,
+                borderColor: alpha("#919EAB", 0.32),
+              },
+            }}
+      />
+        <FUploadImage
+            name="image"
+            accept="image/*"
+            maxSize={3145728}
+            onDrop={handleDrop}
+          />
+          <LoadingButton
+              type="submit"
+              variant="contained"
+              size="small"
+              loading={isSubmitting || isLoading}
+            >
+              Save Changes
+          </LoadingButton>
+      </Box>
+      </FormProvider>
       </Box>
       </Modal>
 
@@ -140,6 +203,7 @@ const style = {
   width: 500,
   bgcolor: 'background.paper',
   border: '2px solid #000',
+  borderRadius: "10px",
   boxShadow: 24,
   p: 4,
 };

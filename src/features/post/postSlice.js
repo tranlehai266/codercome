@@ -79,6 +79,7 @@ const slice = createSlice({
       state.postsById[updatedPost._id] = {
       ...state.postsById[updatedPost._id],  // giữ lại thông tin cũ
       content : updatedPost.content, // update content thôi
+      image : updatedPost.image // update image thôi
       }};
     }
 
@@ -159,13 +160,14 @@ export const sendPostReaction =
       toast.error(error.message);
     }
   };
-  export const editPost =({ id, updateContent }) => async (dispatch) => {
+  export const editPost =({ content, image, id }) => async (dispatch) => {
     dispatch(slice.actions.startLoading());
     try {
-      const response = await apiService.put(`/posts/${id}`, { content : updateContent})
+      const imageUrl = await cloudinaryUpload(image);
+      const response = await apiService.put(`/posts/${id}`, { content , image : imageUrl})
       console.log(response)
       dispatch(slice.actions.editPostSuccess(response.data));
-      toast.success("Edit Text Success");
+      toast.success("Edit Post Success");
       
     } catch (error) {
       dispatch(slice.actions.hasError(error.message));
